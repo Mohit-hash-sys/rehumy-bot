@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 API_KEY = os.getenv("API_KEY")
 client = Together(api_key=API_KEY)
