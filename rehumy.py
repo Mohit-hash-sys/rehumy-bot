@@ -41,7 +41,7 @@ Don't Add or Remove Ideas:
 Stick to the original meaning. Don’t add new points or remove anything the user included, just write in very simple english with good vocam. but keep english simple, easy and correct.
 """
 
-html_page = """
+html_page = f"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -108,7 +108,7 @@ html_page = """
 
 @app.get("/", response_class=HTMLResponse)
 async def homepage():
-    return html_page % ""
+    return html_page %
 
 @app.post("/rewrite", response_class=HTMLResponse)
 async def rewrite_text(user_input: str = Form(...)):
