@@ -1,8 +1,11 @@
 from flask import Flask, request
 import requests
+import os  # ✅ Needed for environment variable
 
 app = Flask(__name__)
-TOKEN = "7636482341:AAFn7ARpEH7J3ORhm8ctCUMSMS8i9aswbBg"
+
+# Get the Telegram bot token from environment variables
+TOKEN = os.getenv("BOT_TOKEN")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
 @app.route('/')
@@ -23,3 +26,4 @@ def webhook():
 
 if __name__ == "__main__":
     app.run()
+
