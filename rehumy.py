@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
+# Static files mounting commented out because no static directory needed
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 
 API_KEY = os.getenv("API_KEY")
@@ -23,7 +24,7 @@ Rewrite each and every sentence into simple form from the given text use loose g
 • Remove all commas STRICTLY, from the paragraphs, instead, use Indian-style conjunctions like 'as', 'so', 'since', 'but also', 'not only but also', 'along with', 'such as', 'or else', etc.
 • Each sentence must have at least seven words.
 • Write only in different paragraph form (no lists or bullets).
-write sentences into very clear and simple english with no hard words.
+ write sentences into very clear and simple english with no hard words.
 • Allow inconsistent tone and natural rhythm—vary sentence length and cadence.
 • use simple, clear and  very easy vocabulary always.
 
@@ -41,7 +42,7 @@ Don't Add or Remove Ideas:
 Stick to the original meaning. Don’t add new points or remove anything the user included, just write in very simple english with good vocam. but keep english simple, easy and correct.
 """
 
-html_page = f"""
+html_page = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -101,14 +102,15 @@ html_page = f"""
         <textarea name="user_input" placeholder="Paste your text here..."></textarea><br><br>
         <button type="submit">Rewrite Text</button>
     </form>
-    %s
+    {result}
 </body>
 </html>
 """
 
 @app.get("/", response_class=HTMLResponse)
 async def homepage():
-    return html_page %
+    # No dynamic content on homepage
+    return html_page.format(result="")
 
 @app.post("/rewrite", response_class=HTMLResponse)
 async def rewrite_text(user_input: str = Form(...)):
@@ -116,11 +118,11 @@ async def rewrite_text(user_input: str = Form(...)):
 
     if word_count < 100:
         message = "<div class='result'>❗ Please provide more than 100 words (up to 500).</div>"
-        return html_page % message
+        return html_page.format(result=message)
 
     if word_count > 500:
         message = "<div class='result'>❗ Your text exceeds 500 words. Please shorten it.</div>"
-        return html_page % message
+        return html_page.format(result=message)
 
     try:
         response = client.chat.completions.create(
@@ -132,7 +134,8 @@ async def rewrite_text(user_input: str = Form(...)):
         )
         rewritten = response.choices[0].message.content.strip()
         message = f"<div class='result'><strong>Rewritten Text:</strong><br><br>{rewritten}</div>"
-        return html_page % message
+        return html_page.format(result=message)
 
     except Exception as e:
-        return html_page % f"<div class='result'>⚠️ Error while rewriting: {e}</div>"
+        error_message = f"<div class='result'>⚠️ Error while rewriting: {e}</div>"
+        return html_page.format(result=error_message)
