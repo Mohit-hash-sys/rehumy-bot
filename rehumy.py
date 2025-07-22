@@ -1,22 +1,19 @@
-import os
-import logging
-import re
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from together import Together
+import os
+import re
+from dotenv import load_dotenv
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+load_dotenv()
 
-# API Keys (HIDE YOUR KEY IN ENV ON RENDER)
-TELEGRAM_TOKEN = os.getenv("BOT_TOKEN")
-TOGETHER_API_KEY = os.getenv("API_KEY")
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Setup Together client
-client = Together(api_key=TOGETHER_API_KEY)
+API_KEY = os.getenv("API_KEY")
+client = Together(api_key=API_KEY)
 
-# System prompt for rewriting
 SYSTEM_PROMPT = """
 You are a rewriting engine.  When you transform any input text, obey these rules exactly:
 
@@ -44,57 +41,98 @@ Don't Add or Remove Ideas:
 Stick to the original meaning. Don’t add new points or remove anything the user included, just write in very simple english with good vocam. but keep english simple, easy and correct.
 """
 
-# Command: /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "👋 Welcome! Please paste your AI-generated text (between 100 and 500 words) to rewrite it into simple English. Make sure it's clean and under the limit!"
-    )
+html_page = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Text Humanizer</title>
+    <style>
+        body {
+            background: #eaf4fc;
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #1976d2;
+        }
+        form {
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            resize: vertical;
+        }
+        button {
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .result {
+            max-width: 700px;
+            margin: 30px auto;
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            line-height: 1.6em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Humanize Your AI Text</h1>
+    <form action="/rewrite" method="post">
+        <p><strong>Paste your AI-generated text (between 100 and 500 words):</strong></p>
+        <textarea name="user_input" placeholder="Paste your text here..."></textarea><br><br>
+        <button type="submit">Rewrite Text</button>
+    </form>
+    %s
+</body>
+</html>
+"""
 
-# Command: /help
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "ℹ️ Paste any AI-generated text (100–500 words) and I’ll simplify it. Just send the message directly. Nothing else is needed!"
-    )
+@app.get("/", response_class=HTMLResponse)
+async def homepage():
+    return html_page % ""
 
-# Handle user messages
-async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.strip()
-    word_count = len(re.findall(r'\b\w+\b', text))
+@app.post("/rewrite", response_class=HTMLResponse)
+async def rewrite_text(user_input: str = Form(...)):
+    word_count = len(re.findall(r'\b\w+\b', user_input))
 
     if word_count < 100:
-        await update.message.reply_text("❗ Please provide more than 100 words (up to 500).")
-        return
-    if word_count > 500:
-        await update.message.reply_text("❗ Your text exceeds 500 words. Please shorten it.")
-        return
+        message = "<div class='result'>❗ Please provide more than 100 words (up to 500).</div>"
+        return html_page % message
 
-    await update.message.reply_text("⏳ Rewriting your text... Please wait...")
+    if word_count > 500:
+        message = "<div class='result'>❗ Your text exceeds 500 words. Please shorten it.</div>"
+        return html_page % message
 
     try:
         response = client.chat.completions.create(
             model="lgai/exaone-deep-32b",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": text}
+                {"role": "user", "content": user_input}
             ]
         )
         rewritten = response.choices[0].message.content.strip()
-        await update.message.reply_text(rewritten)
+        message = f"<div class='result'><strong>Rewritten Text:</strong><br><br>{rewritten}</div>"
+        return html_page % message
 
     except Exception as e:
-        logger.error(f"API error: {e}")
-        await update.message.reply_text("⚠️ Something went wrong while rewriting. Try again later.")
-
-# Main function
-def main():
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-
-    print("Bot is running...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+        return html_page % f"<div class='result'>⚠️ Error while rewriting: {e}</div>"
