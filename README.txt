@@ -13,7 +13,8 @@
 6. Set the webhook with this command:
 
 ```
-curl -F "url=https://your-url.onrender.com/7636482341:AAFn7ARpEH7J3ORhm8ctCUMSMS8i9aswbBg" https://api.telegram.org/bot7636482341:AAFn7ARpEH7J3ORhm8ctCUMSMS8i9aswbBg/setWebhook
+curl -F "url=https://rehumy.onrender.com/$BOT_KEY" https://api.telegram.org/bot$BOT_KEY/setWebhook
+
 ```
 
 Replace `https://your-url.onrender.com` with your actual Render app URL.
