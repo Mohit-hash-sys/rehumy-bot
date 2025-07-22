@@ -48,25 +48,25 @@ html_page = """
 <head>
     <title>AI Text Humanizer</title>
     <style>
-        body {
+        body {{
             background: #eaf4fc;
             font-family: Arial, sans-serif;
             padding: 40px;
             color: #333;
-        }
-        h1 {
+        }}
+        h1 {{
             text-align: center;
             color: #1976d2;
-        }
-        form {
+        }}
+        form {{
             max-width: 700px;
             margin: auto;
             padding: 20px;
             background: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        textarea {
+        }}
+        textarea {{
             width: 100%;
             height: 200px;
             padding: 10px;
@@ -74,8 +74,8 @@ html_page = """
             border-radius: 6px;
             border: 1px solid #ccc;
             resize: vertical;
-        }
-        button {
+        }}
+        button {{
             background: #1976d2;
             color: #fff;
             border: none;
@@ -83,8 +83,8 @@ html_page = """
             font-size: 16px;
             border-radius: 6px;
             cursor: pointer;
-        }
-        .result {
+        }}
+        .result {{
             max-width: 700px;
             margin: 30px auto;
             background: #f0f8ff;
@@ -92,7 +92,7 @@ html_page = """
             border-radius: 6px;
             white-space: pre-wrap;
             line-height: 1.6em;
-        }
+        }}
     </style>
 </head>
 <body>
