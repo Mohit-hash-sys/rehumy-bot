@@ -1,5 +1,4 @@
 fastapi
-gunicorn
 uvicorn
-python-telegram-bot==20.7
+pyTelegramBotAPI==4.12.0
 together
